@@ -1,0 +1,117 @@
+From 5fffe9ebf83690bd569fed66705c083fecda78f7 Mon Sep 17 00:00:00 2001
+From: Jan Charvat <jancharvat.charvat@gmail.com>
+Date: Wed, 6 Apr 2022 12:15:04 +0200
+Subject: [PATCH 3/5] arch/riscv/esp32c3: ESP32C3 TWAI (CAN) controller
+ included into Kconfig.
+
+Signed-off-by: Jan Charvat <jancharvat.charvat@gmail.com>
+---
+ arch/risc-v/src/esp32c3/Kconfig   | 62 +++++++++++++++++++++++++++++++
+ arch/risc-v/src/esp32c3/Make.defs |  4 ++
+ 2 files changed, 66 insertions(+)
+
+diff --git a/arch/risc-v/src/esp32c3/Kconfig b/arch/risc-v/src/esp32c3/Kconfig
+index 9ce6bf95c8..a813e8735b 100644
+--- a/arch/risc-v/src/esp32c3/Kconfig
++++ b/arch/risc-v/src/esp32c3/Kconfig
+@@ -197,6 +197,11 @@ config ESP32C3_I2C
+ 	bool
+ 	default n
+ 
++config ESP32C3_TWAI
++    bool
++    default n
++    select CAN
++
+ config ESP32C3_TIMER
+ 	bool
+ 	default n
+@@ -252,6 +257,11 @@ config ESP32C3_I2C0
+ 	default n
+ 	select ESP32C3_I2C
+ 
++config ESP32C3_TWAI0
++    bool "TWAI (CAN) 0"
++    default n
++    select ESP32C3_TWAI
++
+ config ESP32C3_RNG
+ 	bool "Random Number Generator (RNG)"
+ 	default n
+@@ -408,6 +418,58 @@ config ESP32C3_I2CTIMEOMS
+ 
+ endmenu # I2C configuration
+ 
++menu "TWAI driver options"
++	depends on ESP32C3_TWAI
++
++if ESP32C3_TWAI0
++
++config ESP32C3_TWAI0_TXPIN
++	int "TWAI0 TX Pin"
++	default 2
++
++config ESP32C3_TWAI0_RXPIN
++	int "TWAI0 RX Pin"
++	default 3
++
++config ESP32C3_TWAI0_BITRATE
++	int "TWAI0 bitrate"
++	default 1000000
++	---help---
++		TWAI0 bit rate.  Required if ESP32C3_TWAI0 is defined.
++
++config ESP32C3_TWAI0_SAMPLEP
++	int "TWAI0 sample point"
++	default 80
++	---help---
++		TWAI0 sample point location as a percent value.  Required
++		if ESP32C3_TWAI0 is defined.
++
++config ESP32C3_TWAI0_SJW
++	int "TWAI0 synchronization jump width"
++	default 3
++	---help---
++		SJW limits the number of Time Quanta corrections during bit
++		Resynchronization. Default: 3
++
++config ESP32C3_TWAI0_SAM
++	bool "TWAI0 sampling"
++	default n
++	---help---
++		The bus is sampled 3 times (recommended for low to medium speed buses
++		to spikes on the bus-line).
++
++endif # ESP32C3_TWAI0
++
++config ESP32C3_TWAI_REGDEBUG
++    bool "TWAI register level debug"
++    depends on DEBUG_CAN_INFO
++    default n
++    ---help---
++        Output detailed register-level TWAI debug information. Requires also
++        CONFIG_DEBUG_CAN_INFO.
++
++endmenu #ESP32C3_TWAI
++
+ menu "SPI configuration"
+ 	depends on ESP32C3_SPI
+ 
+diff --git a/arch/risc-v/src/esp32c3/Make.defs b/arch/risc-v/src/esp32c3/Make.defs
+index 74e83b5923..8deb177dc2 100644
+--- a/arch/risc-v/src/esp32c3/Make.defs
++++ b/arch/risc-v/src/esp32c3/Make.defs
+@@ -78,6 +78,10 @@ ifeq ($(CONFIG_ESP32C3_I2C),y)
+ CHIP_CSRCS += esp32c3_i2c.c
+ endif
+ 
++ifeq ($(CONFIG_ESP32C3_TWAI),y)
++CHIP_CSRCS += esp32c3_twai.c
++endif
++
+ ifeq ($(CONFIG_ESP32C3_SPI),y)
+ CHIP_CSRCS += esp32c3_spi.c
+   ifeq ($(CONFIG_SPI_SLAVE),y)
+-- 
+2.25.1
+
